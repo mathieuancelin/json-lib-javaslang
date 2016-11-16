@@ -1,5 +1,8 @@
 package org.reactivecouchbase.json;
 
+import javaslang.Tuple;
+import javaslang.collection.HashMap;
+import javaslang.collection.Map;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -7,8 +10,6 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Syntax {
 
@@ -173,8 +174,6 @@ public class Syntax {
     }
 
     static Map<String, JsValue> asMap(String name, JsValue value) {
-        Map<String, JsValue> values = new HashMap<String, JsValue>();
-        values.put(name, value);
-        return values;
+        return HashMap.of(Tuple.of(name, value));
     }
 }

@@ -1,24 +1,15 @@
 package org.reactivecouchbase.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import javaslang.collection.Array;
+import javaslang.collection.Map;
+import javaslang.collection.Seq;
 import org.reactivecouchbase.json.mapping.*;
-import org.reactivecouchbase.validation.Rule;
-import org.reactivecouchbase.validation.Validation;
-import org.reactivecouchbase.validation.ValidationError;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.reactivecouchbase.json.Syntax.$;
 
 public class Json {
 
     public static JsObject obj(Map<String, ?> objects) {
-        JsObject obj = Json.obj();
-        for (Map.Entry<String, ?> entry : objects.entrySet()) {
-            obj = obj.add($(entry.getKey(), wrap(entry.getValue())));
-        }
-        return obj;
+        return new JsObject(objects.bimap(k -> k, Json::wrap));
     }
 
     public static <T> Format<T> format(final Class<T> clazz) {
@@ -39,13 +30,13 @@ public class Json {
 
     public static <T> Reader<T> reads(final Class<T> clazz) {
         if (DefaultReaders.readers.containsKey(clazz)) {
-            return (Reader<T>) DefaultReaders.readers.get(clazz);
+            return (Reader<T>) DefaultReaders.readers.get(clazz).get();
         }
         return value -> {
             try {
                 return new JsSuccess<T>(Jackson.fromJson(Jackson.jsValueToJsonNode(value), clazz));
             } catch (Exception e) {
-                return new JsError<T>(Collections.<Throwable>singletonList(e));
+                return new JsError<T>(Array.of(e));
             }
         };
     }
@@ -81,28 +72,27 @@ public class Json {
     }
 
     public static JsObject obj(JsObject... objects) {
-        return obj(Arrays.asList(objects));
+        return obj(Array.of(objects));
     }
 
     public static JsObject obj() {
-        return obj(new ArrayList<JsObject>());
+        return new JsObject();
     }
 
-    public static <T extends Object> JsArray array(List<T> objects) {
-        return new JsArray(objects.stream().map(Json::wrap).collect(Collectors.toList()));
+    public static <T extends Object> JsArray array(Seq<T> objects) {
+        return new JsArray(objects.map(Json::wrap));
     }
 
     @SuppressWarnings("unchecked")
     public static JsArray arr(Object... objects) {
-        if (objects != null && objects.length == 1 && List.class.isAssignableFrom(objects[0].getClass())) {
-            return array((List<Object>) objects[0]);
+        if (objects != null && objects.length == 1 && Seq.class.isAssignableFrom(objects[0].getClass())) {
+            return array((Seq<Object>) objects[0]);
         }
-        List<Object> objs = Arrays.asList(objects);
-        return array(objs);
+        return array(Array.of(objects));
     }
 
-    public static <T> JsArray arr(List<T> collection, final Writer<T> writer) {
-        return Json.arr(collection.stream().map(writer::write).collect(Collectors.toList()));
+    public static <T> JsArray arr(Seq<T> collection, final Writer<T> writer) {
+        return Json.arr(collection.map(writer::write));
     }
 
     public static String stringify(JsValue value) {
@@ -129,13 +119,14 @@ public class Json {
         return reader.read(Json.parse(value));
     }
 
-    public static <T> Validation<T, ValidationError> fromJson(JsValue value, Rule<JsValue, T> reader) {
-        return reader.validate(value);
-    }
-
-    public static <T> Validation<T, ValidationError> fromJson(String value, Rule<JsValue, T> reader) {
-        return reader.validate(Json.parse(value));
-    }
+    // TODO : use javaslang validation
+    // public static <T> Validation<T, ValidationError> fromJson(JsValue value, Rule<JsValue, T> reader) {
+    //     return reader.validate(value);
+    // }
+    //
+    // public static <T> Validation<T, ValidationError> fromJson(String value, Rule<JsValue, T> reader) {
+    //     return reader.validate(Json.parse(value));
+    // }
 
     public static <T, V extends T> JsValue toJson(V o, Writer<T> writer) {
         return writer.write(o);

@@ -1,14 +1,15 @@
 package org.reactivecouchbase.json.mapping;
 
-import org.reactivecouchbase.functional.Option;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
+import javaslang.control.Option;
+
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Function;
 
 public class JsSuccess<T> extends JsResult<T> {
+
     private final T value;
 
     public JsSuccess(T value) {
@@ -96,7 +97,7 @@ public class JsSuccess<T> extends JsResult<T> {
             if (p.apply(a)) {
                 return new JsSuccess<>(a);
             }
-            return new JsError<>(new ArrayList<>());
+            return new JsError<>(Array.empty());
         });
     }
 
@@ -104,31 +105,27 @@ public class JsSuccess<T> extends JsResult<T> {
     public JsResult<T> filterNot(final Function<T, Boolean> p) {
         return this.flatMap(a -> {
             if (p.apply(a)) {
-                return new JsError<>(new ArrayList<>());
+                return new JsError<>(Array.empty());
             }
             return new JsSuccess<>(a);
         });
     }
 
     @Override
-    public JsResult<T> filter(final Function<T, Boolean> predicate, final List<Throwable> errors) {
+    public JsResult<T> filter(final Function<T, Boolean> predicate, final Seq<Throwable> errors) {
         return this.flatMap(a -> {
             if (predicate.apply(a)) {
                 return new JsSuccess<>(a);
             }
-            List<Throwable> ts = new ArrayList<>();
-            ts.addAll(errors);
-            return new JsError<>(ts);
+            return new JsError<>(errors);
         });
     }
 
     @Override
-    public JsResult<T> filterNot(final Function<T, Boolean> predicate, final List<Throwable> errors) {
+    public JsResult<T> filterNot(final Function<T, Boolean> predicate, final Seq<Throwable> errors) {
         return this.flatMap(a -> {
             if (predicate.apply(a)) {
-                List<Throwable> ts = new ArrayList<>();
-                ts.addAll(errors);
-                return new JsError<>(ts);
+                return new JsError<>(errors);
             }
             return new JsSuccess<>(a);
         });
@@ -140,9 +137,7 @@ public class JsSuccess<T> extends JsResult<T> {
             if (predicate.apply(a)) {
                 return new JsSuccess<>(a);
             }
-            List<Throwable> ts = new ArrayList<>();
-            ts.add(error);
-            return new JsError<>(ts);
+            return new JsError<>(Array.of(error));
         });
     }
 
@@ -150,9 +145,7 @@ public class JsSuccess<T> extends JsResult<T> {
     public JsResult<T> filterNot(final Function<T, Boolean> predicate, final Throwable error) {
         return this.flatMap(a -> {
             if (predicate.apply(a)) {
-                List<Throwable> ts = new ArrayList<>();
-                ts.add(error);
-                return new JsError<>(ts);
+                return new JsError<>(Array.of(error));
             }
             return new JsSuccess<>(a);
         });
@@ -160,7 +153,7 @@ public class JsSuccess<T> extends JsResult<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return Collections.singletonList(value).iterator();
+        return Array.of(value).iterator();
     }
 
     @Override

@@ -1,28 +1,26 @@
 package org.reactivecouchbase.json.mapping;
 
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
 import org.reactivecouchbase.json.JsValue;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class JsValidator<T> implements Reader<T> {
 
-    private final List<Reader<T>> validators;
+    private final Seq<Reader<T>> validators;
     private final boolean traverse;
 
     public static <T> JsValidator<T> validateWith(final Class<T> clazz) {
-        return new JsValidator<T>(Collections.singletonList(DefaultReaders.getReader(clazz).getOrElse(() -> {
+        return new JsValidator<T>(Array.of(DefaultReaders.getReader(clazz).getOrElse(() -> {
             throw new IllegalStateException("No reader found for class " + clazz.getName());
         })), true);
     }
 
     public static <T> JsValidator<T> validateWith(Reader<T> base) {
-        return new JsValidator<T>(Collections.singletonList(base), true);
+        return new JsValidator<T>(Array.of(base), true);
     }
 
     public static <T> JsValidator<T> of(final Class<T> clazz) {
-        return new JsValidator<>(new ArrayList<>(), true);
+        return new JsValidator<>(Array.empty(), true);
     }
 
     public JsValidator<T> traversable() {
@@ -33,29 +31,26 @@ public class JsValidator<T> implements Reader<T> {
         return new JsValidator<>(validators, false);
     }
 
-    public JsValidator(List<Reader<T>> validators, boolean traverse) {
+    public JsValidator(Seq<Reader<T>> validators, boolean traverse) {
         this.validators = validators;
         this.traverse = traverse;
     }
 
     public JsValidator<T> and(Reader<T> reader) {
-        List<Reader<T>> newReaders = new ArrayList<>();
-        newReaders.addAll(validators);
-        newReaders.add(reader);
-        return new JsValidator<>(newReaders, traverse);
+        return new JsValidator<>(validators.append(reader), traverse);
     }
 
     @Override
     public JsResult<T> read(JsValue value) {
         JsResult<T> lastRes = JsResult.error(new RuntimeException("No validators"));
-        List<Throwable> throwables = new ArrayList<>();
+        Seq<Throwable> throwables = Array.empty();
         for (Reader<T> reader : validators) {
             lastRes = reader.read(value);
             if (lastRes.isErrors()) {
                 if (!traverse) {
                     return lastRes;
                 } else {
-                    throwables.addAll(lastRes.asError().get().errors);
+                    throwables = throwables.appendAll(lastRes.asError().get().errors);
                 }
             }
         }

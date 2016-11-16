@@ -1,67 +1,70 @@
 package org.reactivecouchbase.json;
 
-import org.reactivecouchbase.common.Throwables;
-import org.reactivecouchbase.functional.Option;
-import org.reactivecouchbase.functional.Tuple;
+import javaslang.Tuple;
+import javaslang.Tuple2;
+import javaslang.collection.*;
+import javaslang.control.Option;
+import javaslang.control.Try;
 import org.reactivecouchbase.json.mapping.JsResult;
 import org.reactivecouchbase.json.mapping.Reader;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static org.reactivecouchbase.json.Syntax.$;
 import static org.reactivecouchbase.json.Syntax.nill;
 
-public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsValue>> {
+public class JsObject extends JsValue implements Iterable<Tuple2<String, JsValue>> {
     public final Map<String, JsValue> values;
 
     public JsObject(Map<String, JsValue> values) {
         if (values == null) {
             throw new IllegalArgumentException("Values can't be null !");
         }
-        this.values = Collections.unmodifiableMap(values);
+        this.values = values;
     }
 
     public JsObject() {
-        this.values = Collections.unmodifiableMap(new HashMap<>());
+        this.values = HashMap.empty();
     }
 
     public JsObject merge(JsObject with) {
         if (with == null) {
             throw new IllegalArgumentException("Value can't be null !");
         }
-        Map<String, JsValue> newValues = new HashMap<>();
-        newValues.putAll(with.values);
-        newValues.putAll(values);
-        return new JsObject(newValues);
+        return new JsObject(values.merge(with.values));
     }
 
     @Override
-    public Iterator<Map.Entry<String, JsValue>> iterator() {
-        return values.entrySet().iterator();
+    public Iterator<Tuple2<String, JsValue>> iterator() {
+        return values.toList().iterator();
     }
+
+    // public JsObject deepMerge(JsObject with) {
+    //     if (with == null) {
+    //         throw new IllegalArgumentException("Value can't be null !");
+    //     }
+    //     return new JsObject(with.values.merge(values.flatMap(entry -> {
+    //         if (with.values.containsKey(entry._1) && entry._2.is(JsObject.class)) {
+    //             return HashMap.of(Tuple.of(entry._1, entry._2.asObject().deepMerge(with.values.get(entry._1).get().asObject())));
+    //         } else {
+    //             return HashMap.of(Tuple.of(entry._1, entry._2));
+    //         }
+    //     }).toMap(t -> t)));
+    // }
 
     public JsObject deepMerge(JsObject with) {
         if (with == null) {
             throw new IllegalArgumentException("Value can't be null !");
         }
-        Map<String, JsValue> newValues = new HashMap<>();
-        newValues.putAll(with.values);
-        for (Map.Entry<String, JsValue> entry : values.entrySet()) {
-            if (with.values.containsKey(entry.getKey()) && entry.getValue().is(JsObject.class)) {
-                newValues.put(entry.getKey(), entry.getValue().as(JsObject.class).deepMerge(with.values.get(entry.getKey()).as(JsObject.class)));
+        Map<String, JsValue> newValues = with.values;
+        for (Tuple2<String, JsValue> entry : values.toList()) {
+            if (with.values.containsKey(entry._1()) && entry._2().is(JsObject.class)) {
+                newValues = newValues.put(entry._1(), entry._2().as(JsObject.class).deepMerge(with.values.get(entry._1()).get().as(JsObject.class)));
             } else {
-                newValues.put(entry.getKey(), entry.getValue());
+                newValues = newValues.put(entry._1(), entry._2());
             }
         }
         return new JsObject(newValues);
@@ -71,7 +74,7 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
         return values.keySet();
     }
 
-    public Collection<JsValue> values() {
+    public Seq<JsValue> values() {
         return values.values();
     }
 
@@ -79,10 +82,7 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
         if (jsObject == null) {
             return new JsObject(values);
         }
-        Map<String, JsValue> newValues = new HashMap<String, JsValue>();
-        newValues.putAll(values);
-        newValues.putAll(jsObject.values);
-        return new JsObject(newValues);
+        return new JsObject(values.merge(jsObject.values));
     }
 
     public JsObject add(String key, Option<JsValue> optVal) {
@@ -104,7 +104,7 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
     public JsObject update(String key, Function<JsValue, JsValue> value) {
         Option<JsValue> field = this.fieldAsOpt(key);
         for (JsValue val : field) {
-            return this.add(key, Option.apply(value.apply(val)));
+            return this.add(key, Option.of(value.apply(val)));
         }
         return this;
     }
@@ -120,7 +120,7 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
     public JsObject upsert(String key, Function<Option<JsValue>, JsValue> value) {
         Option<JsValue> field = this.fieldAsOpt(key);
         JsValue ret = value.apply(field);
-        return this.add(key, Option.apply(ret));
+        return this.add(key, Option.of(ret));
     }
     // update or insert at key only if returned option is Some
     public JsObject upsertOpt(String key, Function<Option<JsValue>, Option<JsValue>> value) {
@@ -136,10 +136,7 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
         if (field == null) {
             return new JsObject(values);
         }
-        Map<String, JsValue> newValues = new HashMap<String, JsValue>();
-        newValues.putAll(values);
-        newValues.remove(field);
-        return new JsObject(newValues);
+        return new JsObject(values.remove(field));
     }
 
     @Override
@@ -147,11 +144,7 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
         if (field == null) {
             return JsUndefined.JSUNDEFINED_INSTANCE;
         }
-        JsValue value = values.get(field);
-        if (value == null) {
-            return JsUndefined.JSUNDEFINED_INSTANCE;
-        }
-        return value;
+        return values.get(field).getOrElse(JsUndefined.JSUNDEFINED_INSTANCE);
     }
 
     @Override
@@ -159,31 +152,28 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
         if (field == null) {
             return Option.none();
         }
-        JsValue val = values.get(field);
-        if (val == null) {
-            return Option.none();
-        }
-        return Option.some(val);
+        return  values.get(field);
     }
 
     @Override
-    public List<JsValue> fields(String fieldName) {
+    public Seq<JsValue> fields(String fieldName) {
         if (fieldName == null) {
-            return Collections.emptyList();
+            return Array.empty();
         }
-        List<JsValue> vals = new ArrayList<JsValue>();
-        for (Map.Entry<String, JsValue> field : values.entrySet()) {
-            if (field.getKey().equals(fieldName)) {
-                vals.add(field.getValue());
+        return values.toList().flatMap(tuple -> {
+            String key = tuple._1;
+            JsValue value = tuple._2;
+            if (key.equals(fieldName)) {
+                return Array.of(value);
             }
-            for (JsObject obj : field.getValue().asOpt(JsObject.class)) {
-                vals.addAll(obj.fields(fieldName));
+            for (JsObject obj : value.asOpt(JsObject.class)) {
+                return obj.fields(fieldName);
             }
-            for (JsObject obj : field.getValue().asOpt(JsPair.class)) {
-                vals.addAll(obj.fields(fieldName));
+            for (JsObject obj : value.asOpt(JsPair.class)) {
+                return obj.fields(fieldName);
             }
-        }
-        return vals;
+            return Array.empty();
+        });
     }
 
     @Override
@@ -197,7 +187,7 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
     }
 
     private String toJsonPairString() {
-        return values.entrySet().stream().map(entry -> "\"" + entry.getKey() + "\":" + entry.getValue().toJsonString()).collect(Collectors.joining(","));
+        return values.toList().map(tuple -> "\"" + tuple._1 + "\":" + tuple._2.toJsonString()).mkString(",");
     }
 
     @Override
@@ -224,9 +214,9 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
             return false;
         }
         JsObject object = (JsObject) o;
-        for (Map.Entry<String, JsValue> value : values.entrySet()) {
-            JsValue field = object.field(value.getKey());
-            if (!field.deepEquals(value.getValue())) {
+        for (Tuple2<String, JsValue> value : values.toList()) {
+            JsValue field = object.field(value._1());
+            if (!field.deepEquals(value._2())) {
                 return false;
             }
         }
@@ -243,38 +233,30 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
         return values.containsKey(field);
     }
 
-    public JsObject mapProperties(Function<Tuple<String, JsValue>, JsValue> block) {
-        Map<String, JsValue> resulting = new HashMap<>();
-        for (Map.Entry<String, JsValue> entry : values.entrySet()) {
-            JsValue tuple = block.apply(new Tuple<>(entry.getKey(), entry.getValue()));
-            resulting.put(entry.getKey(), tuple);
-        }
-        return new JsObject(resulting);
+    public JsObject mapProperties(Function<Tuple2<String, JsValue>, JsValue> block) {
+        return new JsObject(values.map(t -> Tuple.of(t._1, block.apply(t))).toMap(t -> t));
     }
 
     public <T> Map<String, T> mapPropertiesWith(Reader<T> reader) {
-        Map<String, T> resultMap = new HashMap<>();
-        for (Map.Entry<String, JsValue> entry : values.entrySet()) {
-            JsResult<T> result = reader.read(entry.getValue());
-            if (result.hasErrors()) {
+        return values.map(t -> {
+            JsResult<T> result = reader.read(t._2);
+            if (result.isErrors()) {
                 throw Throwables.propagate(result.asError().get().firstError());
+            } else {
+                return Tuple.of(t._1, result.get());
             }
-            resultMap.put(entry.getKey(), result.get());
-        }
-        return resultMap;
+        }).toMap(t -> t);
     }
 
     public <T> Map<String, T> mapPropertiesWith(Reader<T> reader, Function<JsResult<T>, T> onError) {
-        Map<String, T> resultMap = new HashMap<>();
-        for (Map.Entry<String, JsValue> entry : values.entrySet()) {
-            JsResult<T> result = reader.read(entry.getValue());
-            if (result.hasErrors()) {
-                resultMap.put(entry.getKey(), onError.apply(result));
+        return values.map(t -> {
+            JsResult<T> result = reader.read(t._2);
+            if (result.isErrors()) {
+                return Tuple.of(t._1, onError.apply(result));
             } else {
-                resultMap.put(entry.getKey(), result.get());
+                return Tuple.of(t._1, result.get());
             }
-        }
-        return resultMap;
+        }).toMap(t -> t);
     }
 
     public int nbrOfElements() {
@@ -295,7 +277,7 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
 
     @Override
     public JsObject cloneNode() {
-        return new JsObject(new HashMap<>(values));
+        return new JsObject(HashMap.ofEntries(values));
     }
 
     public JsObject with(String key) {
@@ -313,7 +295,9 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
     }
 
     public <T extends JsValue> JsObject with(String key, Option<T> value) {
-        return add(key, value.as(JsValue.class));
+        return add(key, value.flatMap(v ->
+            Try.of(() -> JsValue.class.cast(v)).toOption()
+        ));
     }
 
     public JsObject with(String key, Integer value) {
@@ -345,65 +329,30 @@ public class JsObject extends JsValue implements Iterable<Map.Entry<String, JsVa
     }
 
     public JsObject withInt(String key, Option<Integer> value) {
-        return add(key, value.map(new Function<Integer, JsValue>() {
-            @Override
-            public JsValue apply(Integer input) {
-                return new JsNumber(input);
-            }
-        }));
+        return add(key, value.map(JsNumber::new));
     }
 
     public JsObject withLong(String key, Option<Long> value) {
-        return add(key, value.map(new Function<Long, JsValue>() {
-            @Override
-            public JsValue apply(Long input) {
-                return new JsNumber(input);
-            }
-        }));
+        return add(key, value.map(JsNumber::new));
     }
 
     public JsObject withDouble(String key, Option<Double> value) {
-        return add(key, value.map(new Function<Double, JsValue>() {
-            @Override
-            public JsValue apply(Double input) {
-                return new JsNumber(input);
-            }
-        }));
+        return add(key, value.map(JsNumber::new));
     }
 
     public JsObject withBigInt(String key, Option<BigInteger> value) {
-        return add(key, value.map(new Function<BigInteger, JsValue>() {
-            @Override
-            public JsValue apply(BigInteger input) {
-                return new JsNumber(input);
-            }
-        }));
+        return add(key, value.map(JsNumber::new));
     }
 
     public JsObject withBigDec(String key, Option<BigDecimal> value) {
-        return add(key, value.map(new Function<BigDecimal, JsValue>() {
-            @Override
-            public JsValue apply(BigDecimal input) {
-                return new JsNumber(input);
-            }
-        }));
+        return add(key, value.map(JsNumber::new));
     }
 
     public JsObject withBoolean(String key, Option<Boolean> value) {
-        return add(key, value.map(new Function<Boolean, JsValue>() {
-            @Override
-            public JsValue apply(Boolean input) {
-                return new JsBoolean(input);
-            }
-        }));
+        return add(key, value.map(JsBoolean::new));
     }
 
     public JsObject withString(String key, Option<String> value) {
-        return add(key, value.map(new Function<String, JsValue>() {
-            @Override
-            public JsValue apply(String input) {
-                return new JsString(input);
-            }
-        }));
+        return add(key, value.map(JsString::new));
     }
 }

@@ -1,13 +1,10 @@
 package org.reactivecouchbase.json.mapping;
 
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
 import org.reactivecouchbase.json.JsObject;
 import org.reactivecouchbase.json.JsValue;
 import org.reactivecouchbase.json.Json;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.reactivecouchbase.json.Syntax.$;
 
@@ -22,11 +19,11 @@ public class ThrowableWriter implements Writer<Throwable> {
     @Override
     public JsValue write(Throwable value) {
         StackTraceElement[] els = value.getStackTrace();
-        List<StackTraceElement> elements = new ArrayList<>();
+        Seq<StackTraceElement> elements = Array.empty();
         if (els != null && els.length != 0) {
-            elements.addAll(Arrays.asList(els));
+            elements = elements.appendAll(Array.of(els));
         }
-        List<String> elementsAsStr = elements.stream().map(StackTraceElement::toString).collect(Collectors.toList());
+        Seq<String> elementsAsStr = elements.map(StackTraceElement::toString);
         JsObject base = Json.obj(
                 $("message", value.getMessage()),
                 $("type", value.getClass().getName())

@@ -1,8 +1,9 @@
 package org.reactivecouchbase.json;
 
-import org.reactivecouchbase.functional.Option;
+import javaslang.control.Option;
 
 public class JsBoolean extends JsValue implements java.lang.Comparable<JsBoolean> {
+
     public final Boolean value;
 
     public JsBoolean(Boolean value) {

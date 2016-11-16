@@ -1,20 +1,18 @@
 package org.reactivecouchbase.json.mapping;
 
-import org.reactivecouchbase.common.Throwables;
-import org.reactivecouchbase.functional.Option;
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
+import javaslang.control.Option;
 import org.reactivecouchbase.json.JsArray;
 import org.reactivecouchbase.json.Json;
+import org.reactivecouchbase.json.Throwables;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class JsError<T> extends JsResult<T> {
 
-    public final List<Throwable> errors;
+    public final Seq<Throwable> errors;
 
     @Override
     public T getValueOrElse(T result) {
@@ -102,56 +100,47 @@ public class JsError<T> extends JsResult<T> {
     }
 
     @Override
-    public JsResult<T> filter(Function<T, Boolean> predicate, List<Throwable> errs) {
+    public JsResult<T> filter(Function<T, Boolean> predicate, Seq<Throwable> errs) {
         JsResult<T> val = this;
-        List<Throwable> thrs = new ArrayList<>();
-        thrs.addAll(this.errors);
         if (val.isSuccess() && predicate.apply(val.get())) {
-            thrs.addAll(errs);
+            return new JsError<>(this.errors.appendAll(errs));
         }
-        return new JsError<T>(thrs);
+        return new JsError<T>(this.errors);
     }
 
     @Override
-    public JsResult<T> filterNot(Function<T, Boolean> predicate, List<Throwable> errs) {
+    public JsResult<T> filterNot(Function<T, Boolean> predicate, Seq<Throwable> errs) {
         JsResult<T> val = this;
-        List<Throwable> thrs = new ArrayList<>();
-        thrs.addAll(this.errors);
         if (val.isSuccess() && !predicate.apply(val.get())) {
-            thrs.addAll(errs);
+            return new JsError<>(this.errors.appendAll(errs));
         }
-        return new JsError<T>(thrs);
+        return new JsError<T>(this.errors);
     }
 
     @Override
     public JsResult<T> filter(Function<T, Boolean> predicate, Throwable error) {
         JsResult<T> val = this;
-        List<Throwable> thrs = new ArrayList<>();
-        thrs.addAll(this.errors);
         if (val.isSuccess() && predicate.apply(val.get())) {
-            thrs.add(error);
+            return new JsError<>(this.errors.append(error));
         }
-        return new JsError<T>(thrs);
+        return new JsError<T>(this.errors);
     }
 
     @Override
     public JsResult<T> filterNot(Function<T, Boolean> predicate, Throwable error) {
         JsResult<T> val = this;
-        List<Throwable> thrs = new ArrayList<>();
-        thrs.addAll(this.errors);
         if (val.isSuccess() && !predicate.apply(val.get())) {
-            thrs.add(error);
+            return new JsError<>(this.errors.append(error));
         }
-        return new JsError<T>(thrs);
+        return new JsError<T>(this.errors);
     }
 
-    public JsError(List<Throwable> errors) {
+    public JsError(Seq<Throwable> errors) {
         this.errors = errors;
     }
 
     public JsError(Throwable errors) {
-        this.errors = new ArrayList<>();
-        this.errors.add(errors);
+        this.errors = Array.of(errors);
     }
 
     public Throwable firstError() {
@@ -163,15 +152,15 @@ public class JsError<T> extends JsResult<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return Collections.<T>emptyList().iterator();
+        return Array.<T>empty().iterator();
     }
 
     public JsArray errors() {
         return Json.arr(errorsAsString());
     }
 
-    public List<String> errorsAsString() {
-        return errors.stream().map(Throwable::getMessage).collect(Collectors.toList());
+    public Seq<String> errorsAsString() {
+        return errors.map(Throwable::getMessage);
     }
 
     @Override

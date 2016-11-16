@@ -1,9 +1,9 @@
 package org.reactivecouchbase.json.mapping;
 
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
 import org.reactivecouchbase.json.JsValue;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 public interface Reader<T> {
@@ -56,12 +56,12 @@ public interface Reader<T> {
             if (res1.isSuccess() && res2.isSuccess()) {
                 return res1;
             }
-            List<Throwable> errors = new ArrayList<>();
+            Seq<Throwable> errors = Array.empty();
             if (res1.isErrors()) {
-                errors.addAll(res1.asError().get().errors);
+                errors = errors.appendAll(res1.asError().get().errors);
             }
             if (res2.isErrors()) {
-                errors.addAll(res2.asError().get().errors);
+                errors = errors.appendAll(res2.asError().get().errors);
             }
             return new JsError<>(errors);
         };

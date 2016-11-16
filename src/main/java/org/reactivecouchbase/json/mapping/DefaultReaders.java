@@ -1,7 +1,11 @@
 package org.reactivecouchbase.json.mapping;
 
+import javaslang.Tuple;
+import javaslang.collection.HashMap;
+import javaslang.collection.Map;
+import javaslang.collection.Seq;
+import javaslang.control.Option;
 import org.joda.time.DateTime;
-import org.reactivecouchbase.functional.Option;
 import org.reactivecouchbase.json.*;
 
 import java.math.BigDecimal;
@@ -10,20 +14,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class DefaultReaders {
 
     private DefaultReaders() {
     }
 
-    public static <T> Reader<List<T>> seq(final Format<T> reader) {
+    public static <T> Reader<Seq<T>> seq(final Format<T> reader) {
         return seq((Reader<T>) reader);
     }
 
-    public static <T> Reader<List<T>> seq(final Reader<T> reader) {
+    public static <T> Reader<Seq<T>> seq(final Reader<T> reader) {
         return value -> {
             try {
                 JsArray array = value.as(JsArray.class);
@@ -40,11 +41,7 @@ public class DefaultReaders {
 
     @SuppressWarnings("unchecked")
     public static <T> Option<Reader<T>> getReader(Class<T> clazz) {
-        Reader<T> val = (Reader<T>) readers.get(clazz);
-        if (val == null) {
-            return Option.none();
-        }
-        return Option.some(val);
+        return readers.get(clazz).map(r -> (Reader<T>) r);
     }
 
     public static final Reader<JsObject> JS_OBJECT_READER = value -> {
@@ -178,26 +175,26 @@ public class DefaultReaders {
         return new JsError<>(new IllegalAccessError("Not a JsString"));
     };
     public static final Reader<JsValue> JSVALUE_READER = JsSuccess::new;
-    public static final Map<Class<?>, Reader<?>> readers = new HashMap<Class<?>, Reader<?>>() {{
-        put(JsObject.class, JS_OBJECT_READER);
-        put(JsArray.class, JS_ARRAY_READER);
-        put(JsBoolean.class, JS_BOOLEAN_READER);
-        put(JsPair.class, JS_PAIR_READER);
-        put(JsNull.class, JS_NULL_READER);
-        put(JsUndefined.class, JS_UNDEFINED_READER);
-        put(JsNumber.class, JS_NUMBER_READER);
-        put(JsString.class, JS_STRING_READER);
-        put(Boolean.class, BOOLEAN_READER);
-        put(String.class, STRING_READER);
-        put(Double.class, DOUBLE_READER);
-        put(Long.class, LONG_READER);
-        put(Integer.class, INTEGER_READER);
-        put(BigDecimal.class, BIGDEC_READER);
-        put(BigInteger.class, BIGINT_READER);
-        put(JsValue.class, JSVALUE_READER);
-        put(DateTime.class, DATETIME_READER);
-        put(LocalTime.class, LOCAL_TIME_READER);
-        put(LocalDate.class, LOCAL_DATE_READER);
-        put(LocalDateTime.class, LOCAL_DATE_TIME_READER);
-    }};
+    public static final Map<Class<?>, Reader<?>> readers = HashMap.ofEntries(
+        Tuple.of(JsObject.class, JS_OBJECT_READER),
+        Tuple.of(JsArray.class, JS_ARRAY_READER),
+        Tuple.of(JsBoolean.class, JS_BOOLEAN_READER),
+        Tuple.of(JsPair.class, JS_PAIR_READER),
+        Tuple.of(JsNull.class, JS_NULL_READER),
+        Tuple.of(JsUndefined.class, JS_UNDEFINED_READER),
+        Tuple.of(JsNumber.class, JS_NUMBER_READER),
+        Tuple.of(JsString.class, JS_STRING_READER),
+        Tuple.of(Boolean.class, BOOLEAN_READER),
+        Tuple.of(String.class, STRING_READER),
+        Tuple.of(Double.class, DOUBLE_READER),
+        Tuple.of(Long.class, LONG_READER),
+        Tuple.of(Integer.class, INTEGER_READER),
+        Tuple.of(BigDecimal.class, BIGDEC_READER),
+        Tuple.of(BigInteger.class, BIGINT_READER),
+        Tuple.of(JsValue.class, JSVALUE_READER),
+        Tuple.of(DateTime.class, DATETIME_READER),
+        Tuple.of(LocalTime.class, LOCAL_TIME_READER),
+        Tuple.of(LocalDate.class, LOCAL_DATE_READER),
+        Tuple.of(LocalDateTime.class, LOCAL_DATE_TIME_READER)
+    );
 }

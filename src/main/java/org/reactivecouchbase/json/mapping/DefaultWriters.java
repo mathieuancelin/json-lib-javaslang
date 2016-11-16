@@ -1,29 +1,22 @@
 package org.reactivecouchbase.json.mapping;
 
+import javaslang.collection.Seq;
 import org.reactivecouchbase.json.JsArray;
 import org.reactivecouchbase.json.JsObject;
 import org.reactivecouchbase.json.JsValue;
 import org.reactivecouchbase.json.Json;
-
-import java.util.List;
 
 public class DefaultWriters {
 
     private DefaultWriters() {
     }
 
-    public static <T> Writer<List<T>> seq(final Format<T> writer) {
+    public static <T> Writer<Seq<T>> seq(final Format<T> writer) {
         return seq((Writer<T>) writer);
     }
 
-    public static <T> Writer<List<T>> seq(final Writer<T> writer) {
-        return value -> {
-            JsArray array = Json.arr();
-            for (T val : value) {
-                array = array.addElement(writer.write(val));
-            }
-            return array;
-        };
+    public static <T> Writer<Seq<T>> seq(final Writer<T> writer) {
+        return value -> new JsArray(value.map(writer::write));
     }
 
     public static JsValue throwableAsJson(Throwable t, boolean printstacks) {

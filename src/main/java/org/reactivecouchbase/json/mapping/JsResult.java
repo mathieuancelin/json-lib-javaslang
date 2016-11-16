@@ -1,12 +1,10 @@
 package org.reactivecouchbase.json.mapping;
 
-import org.reactivecouchbase.functional.Option;
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
+import javaslang.control.Option;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public abstract class JsResult<T> implements Iterable<T> {
     public abstract T get();
@@ -33,9 +31,9 @@ public abstract class JsResult<T> implements Iterable<T> {
 
     public abstract JsResult<T> filterNot(Function<T, Boolean> predicate);
 
-    public abstract JsResult<T> filter(Function<T, Boolean> predicate, List<Throwable> errors);
+    public abstract JsResult<T> filter(Function<T, Boolean> predicate, Seq<Throwable> errors);
 
-    public abstract JsResult<T> filterNot(Function<T, Boolean> predicate, List<Throwable> errors);
+    public abstract JsResult<T> filterNot(Function<T, Boolean> predicate, Seq<Throwable> errors);
 
     public abstract JsResult<T> filter(Function<T, Boolean> predicate, Throwable errors);
 
@@ -87,11 +85,11 @@ public abstract class JsResult<T> implements Iterable<T> {
         return Option.none();
     }
 
-    public List<Throwable> onErrors() {
+    public Seq<Throwable> onErrors() {
         if (isErrors()) {
-            return Collections.unmodifiableList(asError().get().errors);
+            return asError().get().errors;
         }
-        return Collections.emptyList();
+        return Array.empty();
     }
 
     public Option<T> onSuccess() {
@@ -112,10 +110,10 @@ public abstract class JsResult<T> implements Iterable<T> {
     }
 
     private static <T> JsResult<T> populateErrs(JsResult<T> finalResult, JsResult<?>... results) {
-        List<Throwable> throwables = new ArrayList<>();
+        Seq<Throwable> throwables = Array.empty();
         for (JsResult<?> res : results) {
             if (res.isErrors()) {
-                throwables.addAll(res.asError().get().errors.stream().collect(Collectors.toList()));
+                throwables = throwables.appendAll(res.asError().get().errors);
             }
         }
         if (throwables.isEmpty() && finalResult.isSuccess()) {

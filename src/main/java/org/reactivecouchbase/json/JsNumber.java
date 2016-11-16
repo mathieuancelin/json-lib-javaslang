@@ -1,10 +1,9 @@
 package org.reactivecouchbase.json;
 
-import org.reactivecouchbase.functional.Option;
+import javaslang.control.Option;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.text.DecimalFormat;
 
 public class JsNumber extends JsValue implements java.lang.Comparable<JsNumber> {
     public final BigDecimal value;

@@ -1,29 +1,20 @@
 package org.reactivecouchbase.json;
 
-import org.reactivecouchbase.functional.Option;
-import org.reactivecouchbase.json.mapping.DefaultReaders;
-import org.reactivecouchbase.json.mapping.Format;
-import org.reactivecouchbase.json.mapping.JsError;
-import org.reactivecouchbase.json.mapping.JsResult;
-import org.reactivecouchbase.json.mapping.Reader;
-import org.reactivecouchbase.validation.Rule;
-import org.reactivecouchbase.validation.Validation;
-import org.reactivecouchbase.validation.ValidationError;
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
+import javaslang.control.Option;
+import org.reactivecouchbase.json.mapping.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.regex.Pattern;
 
 public abstract class JsValue implements Serializable {
     public <T extends JsValue> Iterable<T> extractAs(Class<T> clazz) {
         if (is(clazz)) {
-            return Collections.singletonList(clazz.cast(this));
+            return Option.some(clazz.cast(this));
         }
-        return Collections.emptyList();
+        return Option.none();
     }
 
     public <T extends JsValue> boolean is(Class<T> clazz) {
@@ -178,13 +169,14 @@ public abstract class JsValue implements Serializable {
         return reader.read(this);
     }
 
-    public <T> Validation<T, ValidationError> validate(Rule<JsValue, T> rule) {
-        return rule.validate(this);
-    }
-
-    public <T> Validation<T, ValidationError> read(Rule<JsValue, T> rule) {
-        return rule.validate(this);
-    }
+    // TODO : use javaslang validation
+    // public <T> Validation<T, ValidationError> validate(Rule<JsValue, T> rule) {
+    //     return rule.validate(this);
+    // }
+    //
+    // public <T> Validation<T, ValidationError> read(Rule<JsValue, T> rule) {
+    //     return rule.validate(this);
+    // }
 
     public <A extends JsValue> JsResult<A> transform(Reader<A> reader) {
         return reader.read(this);
@@ -207,7 +199,7 @@ public abstract class JsValue implements Serializable {
         JsValue currentValue = this;
         try {
             String[] partsArray = dotSplitter.split(query);
-            List<String> parts = partsArray == null ? new ArrayList<String>() : Arrays.asList(partsArray);
+            Seq<String> parts = partsArray == null ? Array.empty() : Array.of(partsArray);
             for (String part : parts) {
                 if (jsonFieldArraySelector.matcher(part).matches()) {
                     String[] subParts = squareBracketSplitter.split(part);
@@ -224,7 +216,7 @@ public abstract class JsValue implements Serializable {
         } catch (Exception e) {
             return Option.none();
         }
-        return Option.apply(currentValue);
+        return Option.of(currentValue);
     }
 
     public JsValue field(String field) {
@@ -235,8 +227,8 @@ public abstract class JsValue implements Serializable {
         return Option.none();
     }
 
-    public List<JsValue> fields(String fieldName) {
-        return new ArrayList<>();
+    public Seq<JsValue> fields(String fieldName) {
+        return Array.empty();
     }
 
     public JsValue get(int idx) {

@@ -1,29 +1,26 @@
 package org.reactivecouchbase.json;
 
-import org.reactivecouchbase.common.Throwables;
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
 import org.reactivecouchbase.json.mapping.JsResult;
 import org.reactivecouchbase.json.mapping.Reader;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class JsArray extends JsValue implements Iterable<JsValue> {
-    public final List<JsValue> values;
+    public final Seq<JsValue> values;
 
-    public JsArray(List<JsValue> values) {
+    public JsArray(Seq<JsValue> values) {
         if (values == null) {
             throw new IllegalArgumentException("Values can't be null !");
         }
-        this.values = Collections.unmodifiableList(values);
+        this.values = values;
     }
 
     public JsArray() {
-        this.values = Collections.unmodifiableList(new ArrayList<>());
+        this.values = Array.empty();
     }
 
     public boolean contains(JsValue value) {
@@ -48,89 +45,70 @@ public class JsArray extends JsValue implements Iterable<JsValue> {
         if (arr == null) {
             return new JsArray(values);
         }
-        List<JsValue> vals = new ArrayList<>();
-        vals.addAll(values);
-        vals.addAll(arr.values);
-        return new JsArray(vals);
+        return new JsArray(values.appendAll(arr.values));
     }
 
     public JsArray preprend(JsArray arr) {
         if (arr == null) {
             return new JsArray(values);
         }
-        List<JsValue> vals = new ArrayList<>();
-        vals.addAll(values);
-        vals.addAll(0, arr.values);
-        return new JsArray(vals);
+        return new JsArray(values.prependAll(arr.values));
     }
 
     public JsArray addElement(JsValue arr) {
         if (arr == null) {
             return new JsArray(values);
         }
-        List<JsValue> vals = new ArrayList<>();
-        vals.addAll(values);
-        vals.add(arr);
-        return new JsArray(vals);
+        return new JsArray(values.append(arr));
     }
 
     public JsArray preprendElement(JsValue arr) {
         if (arr == null) {
             return new JsArray(values);
         }
-        List<JsValue> vals = new ArrayList<>();
-        vals.addAll(values);
-        vals.add(0, arr);
-        return new JsArray(vals);
+        return new JsArray(values.prepend(arr));
     }
 
     public JsArray map(Function<JsValue, JsValue> map) {
-        return new JsArray(values.stream().map(map).collect(Collectors.toList()));
+        return new JsArray(values.map(map));
     }
 
-    public <T> List<T> mapWith(Reader<T> reader) {
-        List<T> resultList = new ArrayList<T>();
-        for (JsValue value : this.values) {
-            JsResult<T> result = value.read(reader);
+    public <T> Seq<T> mapWith(Reader<T> reader) {
+        return values.map(i -> {
+            JsResult<T> result = i.read(reader);
             if (result.hasErrors()) {
                 throw Throwables.propagate(result.asError().get().firstError());
             }
-            resultList.add(result.get());
-        }
-        return resultList;
+            return result.get();
+        });
     }
 
-    public <T> List<T> mapWith(Reader<T> reader, Function<JsResult<T>, T> onError) {
-        List<T> resultList = new ArrayList<T>();
-        for (JsValue value : this.values) {
-            T v = null;
-            JsResult<T> result = value.read(reader);
+    public <T> Seq<T> mapWith(Reader<T> reader, Function<JsResult<T>, T> onError) {
+        return values.map(i -> {
+            JsResult<T> result = i.read(reader);
             if (result.hasErrors()) {
-                v = onError.apply(result);
-            } else {
-                v = result.get();
+                return onError.apply(result);
             }
-            resultList.add(v);
-        }
-        return resultList;
+            return result.get();
+        });
     }
 
     public JsArray filter(Predicate<JsValue> predicate) {
-        return new JsArray(values.stream().filter(predicate).collect(Collectors.toList()));
+        return new JsArray(values.filter(predicate));
     }
 
     public JsArray filterNot(final Predicate<JsValue> predicate) {
-        return new JsArray(values.stream().filter(predicate.negate()).collect(Collectors.toList()));
+        return new JsArray(values.filter(predicate.negate()));
     }
 
     @Override
     String toJsonString() {
-        return "[" + values.stream().map(JsValue::toJsonString).collect(Collectors.joining(",")) + "]";
+        return "[" + values.map(JsValue::toJsonString).mkString(",") + "]";
     }
 
     @Override
     public String toString() {
-        return "JsArray[" + values.stream().map(Object::toString).collect(Collectors.joining(", ")) + "]";
+        return "JsArray[" + values.map(JsValue::toJsonString).mkString(", ") + "]";
     }
 
     public int size() {
@@ -194,6 +172,6 @@ public class JsArray extends JsValue implements Iterable<JsValue> {
 
     @Override
     public JsArray cloneNode() {
-        return new JsArray(new ArrayList<>(values));
+        return new JsArray(Array.ofAll(values));
     }
 }

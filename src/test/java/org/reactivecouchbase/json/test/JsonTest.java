@@ -6,7 +6,6 @@ import org.reactivecouchbase.json.*;
 import org.reactivecouchbase.json.mapping.*;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 
 import static org.reactivecouchbase.json.Syntax.*;
 import static org.reactivecouchbase.json.mapping.ReaderConstraints.*;
@@ -425,7 +424,7 @@ public class JsonTest {
                         $("key1", "value12"),
                         $("key2", "value22"),
                         $("key3", Json.obj($("key1", "valueSearched")))
-                        )
+                    )
                 )
         );
 

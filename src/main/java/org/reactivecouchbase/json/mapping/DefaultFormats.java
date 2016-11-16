@@ -1,15 +1,14 @@
 package org.reactivecouchbase.json.mapping;
 
+import javaslang.collection.Seq;
 import org.reactivecouchbase.json.JsValue;
-
-import java.util.List;
 
 public class DefaultFormats {
 
     private DefaultFormats() {
     }
 
-    public static <T> Format<List<T>> seq(Format<T> format) {
+    public static <T> Format<Seq<T>> seq(Format<T> format) {
         return compose(DefaultReaders.seq(format), DefaultWriters.seq(format));
     }
 
