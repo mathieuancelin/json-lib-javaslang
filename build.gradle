@@ -1,0 +1,46 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+
+group = 'org.reactivecouchbase.json'
+artifact = 'json-lib-javaslang'
+version = '0.1.0'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://raw.github.com/ReactiveCouchbase/repository/master/snapshots/'
+    }
+}
+
+dependencies {
+
+    compile("com.fasterxml.jackson.core:jackson-core:2.8.5")
+    compile("com.fasterxml.jackson.core:jackson-annotations:2.8.5")
+    compile("com.fasterxml.jackson.core:jackson-databind:2.8.5")
+    compile("joda-time:joda-time:2.9.6")
+    compile("io.javaslang:javaslang:2.0.4")
+    // compile("org.reactivecouchbase:common-lib:1.0-SNAPSHOT")
+
+    testCompile("junit:junit:4.12")
+    testCompile("org.assertj:assertj-core:3.5.2")
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            url version.contains("SNAPSHOT") ? "$buildDir/../repository/snapshots" : "$buildDir/../repository/releases"
+        }
+    }
+}
