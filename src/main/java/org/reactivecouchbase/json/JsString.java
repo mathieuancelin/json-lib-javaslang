@@ -6,6 +6,10 @@ import javaslang.control.Option;
 public class JsString extends JsValue implements java.lang.Comparable<JsString> {
     public final String value;
 
+    public static JsString apply(String value) {
+        return new JsString(value);
+    }
+
     public JsString(String value) {
         if (value == null) {
             value = "";

@@ -19,6 +19,14 @@ import static org.reactivecouchbase.json.Syntax.nill;
 public class JsObject extends JsValue implements Iterable<Tuple2<String, JsValue>> {
     public final Map<String, JsValue> values;
 
+    public static JsObject apply(Map<String, JsValue> values) {
+        return new JsObject(values);
+    }
+
+    public static JsObject apply() {
+        return new JsObject();
+    }
+
     public JsObject(Map<String, JsValue> values) {
         if (values == null) {
             throw new IllegalArgumentException("Values can't be null !");
@@ -41,19 +49,6 @@ public class JsObject extends JsValue implements Iterable<Tuple2<String, JsValue
     public Iterator<Tuple2<String, JsValue>> iterator() {
         return values.toList().iterator();
     }
-
-    // public JsObject deepMerge(JsObject with) {
-    //     if (with == null) {
-    //         throw new IllegalArgumentException("Value can't be null !");
-    //     }
-    //     return new JsObject(with.values.merge(values.flatMap(entry -> {
-    //         if (with.values.containsKey(entry._1) && entry._2.is(JsObject.class)) {
-    //             return HashMap.of(Tuple.of(entry._1, entry._2.asObject().deepMerge(with.values.get(entry._1).get().asObject())));
-    //         } else {
-    //             return HashMap.of(Tuple.of(entry._1, entry._2));
-    //         }
-    //     }).toMap(t -> t)));
-    // }
 
     public JsObject deepMerge(JsObject with) {
         if (with == null) {

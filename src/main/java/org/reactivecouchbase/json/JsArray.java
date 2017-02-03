@@ -12,6 +12,14 @@ import java.util.function.Predicate;
 public class JsArray extends JsValue implements Iterable<JsValue> {
     public final Seq<JsValue> values;
 
+    public static JsArray apply(Seq<JsValue> values) {
+        return new JsArray(values);
+    }
+
+    public static JsArray apply() {
+        return new JsArray();
+    }
+
     public JsArray(Seq<JsValue> values) {
         if (values == null) {
             throw new IllegalArgumentException("Values can't be null !");

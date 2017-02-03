@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import javaslang.collection.Array;
 import javaslang.collection.Map;
 import javaslang.collection.Seq;
+import javaslang.control.Validation;
 import org.reactivecouchbase.json.mapping.*;
+
+import java.util.function.Function;
 
 public class Json {
 
@@ -119,14 +122,13 @@ public class Json {
         return reader.read(Json.parse(value));
     }
 
-    // TODO : use javaslang validation
-    // public static <T> Validation<T, ValidationError> fromJson(JsValue value, Rule<JsValue, T> reader) {
-    //     return reader.validate(value);
-    // }
-    //
-    // public static <T> Validation<T, ValidationError> fromJson(String value, Rule<JsValue, T> reader) {
-    //     return reader.validate(Json.parse(value));
-    // }
+    public static <E, T> Validation<E, T> fromJson(JsValue value, Function<JsValue, Validation<E, T>> reader) {
+        return reader.apply(value);
+    }
+
+    public static <E, T> Validation<E, T> fromJson(String value, Function<JsValue, Validation<E, T>> reader) {
+        return fromJson(Json.parse(value), reader);
+    }
 
     public static <T, V extends T> JsValue toJson(V o, Writer<T> writer) {
         return writer.write(o);

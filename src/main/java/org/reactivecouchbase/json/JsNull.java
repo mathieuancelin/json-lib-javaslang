@@ -6,6 +6,10 @@ public class JsNull extends JsValue {
 
     static final JsNull JSNULL_INSTANCE = new JsNull();
 
+    public static JsNull instance() {
+        return JSNULL_INSTANCE;
+    }
+
     @Override
     public JsValue querySelector(String query) {
         return JsUndefined.JSUNDEFINED_INSTANCE;

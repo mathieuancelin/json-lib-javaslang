@@ -6,6 +6,10 @@ public class JsBoolean extends JsValue implements java.lang.Comparable<JsBoolean
 
     public final Boolean value;
 
+    public static JsBoolean apply(Boolean value) {
+        return new JsBoolean(value);
+    }
+
     public JsBoolean(Boolean value) {
         if (value == null) {
             throw new IllegalArgumentException("Value can't be null !");

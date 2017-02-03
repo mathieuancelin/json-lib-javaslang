@@ -3,10 +3,12 @@ package org.reactivecouchbase.json;
 import javaslang.collection.Array;
 import javaslang.collection.Seq;
 import javaslang.control.Option;
+import javaslang.control.Validation;
 import org.reactivecouchbase.json.mapping.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public abstract class JsValue implements Serializable {
@@ -169,14 +171,13 @@ public abstract class JsValue implements Serializable {
         return reader.read(this);
     }
 
-    // TODO : use javaslang validation
-    // public <T> Validation<T, ValidationError> validate(Rule<JsValue, T> rule) {
-    //     return rule.validate(this);
-    // }
-    //
-    // public <T> Validation<T, ValidationError> read(Rule<JsValue, T> rule) {
-    //     return rule.validate(this);
-    // }
+    public <E, T> Validation<E, T> validate(Function<JsValue, Validation<E, T>> rule) {
+        return rule.apply(this);
+    }
+
+    public <E, T> Validation<E, T> read(Function<JsValue, Validation<E, T>> rule) {
+        return rule.apply(this);
+    }
 
     public <A extends JsValue> JsResult<A> transform(Reader<A> reader) {
         return reader.read(this);

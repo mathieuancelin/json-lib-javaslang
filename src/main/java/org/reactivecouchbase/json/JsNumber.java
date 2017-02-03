@@ -8,6 +8,14 @@ import java.math.BigInteger;
 public class JsNumber extends JsValue implements java.lang.Comparable<JsNumber> {
     public final BigDecimal value;
 
+    public static JsNumber apply(BigDecimal value) { return new JsNumber(value); }
+    public static JsNumber apply(BigInteger value) { return new JsNumber(value); }
+    public static JsNumber apply(Integer value) { return new JsNumber(value); }
+    public static JsNumber apply(Long value) { return new JsNumber(value); }
+    public static JsNumber apply(Double value) { return new JsNumber(value); }
+    public static JsNumber apply(Float value) { return new JsNumber(value); }
+    public static JsNumber apply(Short value) { return new JsNumber(value); }
+
     public JsNumber(BigDecimal value) {
         if (value == null) {
             throw new IllegalArgumentException("Value can't be null !");
