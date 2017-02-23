@@ -42,7 +42,8 @@ public class JsObject extends JsValue implements Iterable<Tuple2<String, JsValue
         if (with == null) {
             throw new IllegalArgumentException("Value can't be null !");
         }
-        return new JsObject(values.merge(with.values));
+        // return new JsObject(values.merge(with.values));
+        return new JsObject(with.values.merge(values));
     }
 
     @Override
@@ -77,7 +78,8 @@ public class JsObject extends JsValue implements Iterable<Tuple2<String, JsValue
         if (jsObject == null) {
             return new JsObject(values);
         }
-        return new JsObject(values.merge(jsObject.values));
+        // return new JsObject(values.merge(jsObject.values));
+        return new JsObject(jsObject.values.merge(values));
     }
 
     public JsObject add(String key, Option<JsValue> optVal) {
