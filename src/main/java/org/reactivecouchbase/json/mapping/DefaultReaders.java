@@ -1,10 +1,10 @@
 package org.reactivecouchbase.json.mapping;
 
-import javaslang.Tuple;
-import javaslang.collection.HashMap;
-import javaslang.collection.Map;
-import javaslang.collection.Seq;
-import javaslang.control.Option;
+import io.vavr.Tuple;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
+import io.vavr.collection.Seq;
+import io.vavr.control.Option;
 import org.joda.time.DateTime;
 import org.reactivecouchbase.json.*;
 

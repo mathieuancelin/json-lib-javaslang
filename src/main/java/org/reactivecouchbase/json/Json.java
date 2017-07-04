@@ -1,10 +1,10 @@
 package org.reactivecouchbase.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import javaslang.collection.Array;
-import javaslang.collection.Map;
-import javaslang.collection.Seq;
-import javaslang.control.Validation;
+import io.vavr.collection.Array;
+import io.vavr.collection.Map;
+import io.vavr.collection.Seq;
+import io.vavr.control.Validation;
 import org.reactivecouchbase.json.mapping.*;
 
 import java.util.function.Function;

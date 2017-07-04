@@ -3,7 +3,7 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
 group = 'org.reactivecouchbase'
-version = '1.0.3'
+version = '1.0.4'
 
 jar {
     baseName = 'json-lib-javaslang'
@@ -22,7 +22,7 @@ dependencies {
     compile("com.fasterxml.jackson.core:jackson-annotations:2.8.5")
     compile("com.fasterxml.jackson.core:jackson-databind:2.8.5")
     compile("joda-time:joda-time:2.9.6")
-    compile("io.javaslang:javaslang:2.0.5")
+    compile('io.vavr:vavr:0.9.0')
 
     testCompile("junit:junit:4.12")
     testCompile("org.assertj:assertj-core:3.5.2")
