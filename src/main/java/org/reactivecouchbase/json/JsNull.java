@@ -1,6 +1,6 @@
 package org.reactivecouchbase.json;
 
-import javaslang.control.Option;
+import io.vavr.control.Option;
 
 public class JsNull extends JsValue {
 

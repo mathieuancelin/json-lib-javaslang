@@ -1,6 +1,6 @@
 package org.reactivecouchbase.json;
 
-import javaslang.control.Option;
+import io.vavr.control.Option;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

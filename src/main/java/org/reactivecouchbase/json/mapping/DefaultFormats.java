@@ -1,6 +1,6 @@
 package org.reactivecouchbase.json.mapping;
 
-import javaslang.collection.Seq;
+import io.vavr.collection.Seq;
 import org.reactivecouchbase.json.JsValue;
 
 public class DefaultFormats {

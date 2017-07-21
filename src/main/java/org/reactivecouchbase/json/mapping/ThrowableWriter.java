@@ -1,7 +1,7 @@
 package org.reactivecouchbase.json.mapping;
 
-import javaslang.collection.Array;
-import javaslang.collection.Seq;
+import io.vavr.collection.Array;
+import io.vavr.collection.Seq;
 import org.reactivecouchbase.json.JsObject;
 import org.reactivecouchbase.json.JsValue;
 import org.reactivecouchbase.json.Json;

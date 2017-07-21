@@ -1,8 +1,8 @@
 package org.reactivecouchbase.json;
 
-import javaslang.Tuple;
-import javaslang.collection.HashMap;
-import javaslang.collection.Map;
+import io.vavr.Tuple;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;

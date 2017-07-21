@@ -1,9 +1,9 @@
 package org.reactivecouchbase.json;
 
-import javaslang.collection.Array;
-import javaslang.collection.Seq;
-import javaslang.control.Option;
-import javaslang.control.Validation;
+import io.vavr.collection.Array;
+import io.vavr.collection.Seq;
+import io.vavr.control.Option;
+import io.vavr.control.Validation;
 import org.reactivecouchbase.json.mapping.*;
 
 import java.io.Serializable;

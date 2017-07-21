@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.BigIntegerNode;
 import com.fasterxml.jackson.databind.node.DecimalNode;
 import com.fasterxml.jackson.databind.ser.Serializers;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import javaslang.Tuple2;
+import io.vavr.Tuple2;
 
 import java.io.IOException;
 import java.io.StringWriter;

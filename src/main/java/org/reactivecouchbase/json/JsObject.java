@@ -1,10 +1,10 @@
 package org.reactivecouchbase.json;
 
-import javaslang.Tuple;
-import javaslang.Tuple2;
-import javaslang.collection.*;
-import javaslang.control.Option;
-import javaslang.control.Try;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import io.vavr.collection.*;
+import io.vavr.control.Option;
+import io.vavr.control.Try;
 import org.reactivecouchbase.json.mapping.JsResult;
 import org.reactivecouchbase.json.mapping.Reader;
 

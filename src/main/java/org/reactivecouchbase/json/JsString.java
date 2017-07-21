@@ -1,7 +1,7 @@
 package org.reactivecouchbase.json;
 
 import com.fasterxml.jackson.databind.node.TextNode;
-import javaslang.control.Option;
+import io.vavr.control.Option;
 
 public class JsString extends JsValue implements java.lang.Comparable<JsString> {
     public final String value;
