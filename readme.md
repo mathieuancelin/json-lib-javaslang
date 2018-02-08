@@ -184,3 +184,10 @@ Writer<User> userWriter = new Writer<User>() {
 
 JsObject user = Json.toJson(new User(...), userWriter).as(JsObject.class);
 ```
+
+
+## Release 
+
+```
+./gradlew release -PreleaseVersion=x.x.x 
+```
