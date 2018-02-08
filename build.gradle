@@ -1,9 +1,20 @@
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'maven-publish'
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
+}
+
+plugins {
+    id "com.jfrog.bintray" version "1.7"
+    id "maven"
+    id "maven-publish"
+    id "java"
+    id 'ch.netzwerg.release' version '1.2.5'
+}
 
 group = 'org.reactivecouchbase'
-version = '2.0.0'
 
 jar {
     baseName = 'json-lib-javaslang'
@@ -14,10 +25,11 @@ targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    mavenCentral()
+    jcenter()
 }
 
 dependencies {
-
     compile("com.fasterxml.jackson.core:jackson-core:2.8.5")
     compile("com.fasterxml.jackson.core:jackson-annotations:2.8.5")
     compile("com.fasterxml.jackson.core:jackson-databind:2.8.5")
@@ -28,18 +40,52 @@ dependencies {
     testCompile("org.assertj:assertj-core:3.5.2")
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+javadoc.failOnError = false
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_PASSWORD')
+    publications = ['mavenPublication']
+    pkg {
+        name = 'json-lib-javaslang'
+        repo = 'maven'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/mathieuancelin/json-lib-javaslang.git'
+        publish = true
+        version {
+            name = "${project.version}"
         }
     }
 }
 
 publishing {
-    repositories {
-        maven {
-            url version.contains("SNAPSHOT") ? "$buildDir/../repository/snapshots" : "$buildDir/../repository/releases"
+    publications {
+        mavenPublication(MavenPublication) {
+            from components.java
+            groupId 'org.reactivecouchbase'
+            artifactId 'json-lib-javaslang'
+            version "${project.version}"
+            artifact sourcesJar
+            artifact javadocJar
         }
     }
+}
+
+release {
+    dependsOn build
+    push = true
+    versionSuffix = '-SNAPSHOT' // '.DEV' or '' (empty) could be useful alternatives
+    tagPrefix = 'v' // 'r' or '' (empty) could be useful alternatives
 }
